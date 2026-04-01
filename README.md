@@ -10,7 +10,7 @@ A minimalist, real-time collaborative notepad. Share a link - anyone with it can
 
 - **Link-based notes** — every note gets a unique URL (`#abc123`). Share it with anyone.
 - **Real-time sync** — changes appear live across all devices on the same link.
-- **My Notes panel** — view, open, and delete all notes you've created from this browser.
+- **My Space panel** — view, open, and delete all notes you've created from this browser.
 - **3-note limit** — up to 3 notes per browser to keep Firebase connections in check.
 - **LocalStorage backup** — your note is cached locally so it survives page refreshes even without a connection.
 - **No authentication** — zero sign-up, zero login.
