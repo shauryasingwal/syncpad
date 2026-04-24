@@ -172,6 +172,11 @@ const panelClose = document.getElementById("panelClose");
 const syncStatus = document.getElementById("syncStatus");
 const presenceStatus = document.getElementById("presenceStatus");
 const noteStats = document.getElementById("noteStats");
+const panelBody    = document.getElementById("panelBody");
+const panelFooter  = document.getElementById("panelFooter");
+const panelClose   = document.getElementById("panelClose");
+const syncStatus   = document.getElementById("syncStatus");
+const noteStats    = document.getElementById("noteStats");
 
 
 /* ==========================
@@ -238,6 +243,8 @@ function attachListener() {
             updateStats(data);
             if (isOwned(noteId)) touchOwned(noteId);
             setSyncStatus(isViewOnly ? "Read-only" : "Synced");
+            setSyncStatus("Synced");
+            console.log("[Cloud] Synced");
         }
 
         if (data === null && !isViewOnly) {
@@ -312,6 +319,9 @@ notepad.addEventListener("input", () => {
     setSyncStatus("Saving…");
     updateStats(notepad.value);
 
+    if (isRemoteUpdate) return;
+    setSyncStatus("Saving…");
+    updateStats(notepad.value);
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
         const text = notepad.value;
@@ -319,6 +329,8 @@ notepad.addEventListener("input", () => {
         localStorage.setItem(LOCAL_KEY, text);
         if (isOwned(noteId)) touchOwned(noteId);
         setSyncStatus("Synced");
+        setSyncStatus("Synced");
+        console.log("[Cloud] Saved");
     }, 500);
 });
 
@@ -418,6 +430,8 @@ clearBtn.addEventListener("click", () => {
     noteRef.set("");
     localStorage.removeItem(LOCAL_KEY);
     if (isOwned(noteId)) touchOwned(noteId);
+    updateStats("");
+    setSyncStatus("Synced");
 
     updateStats("");
     setSyncStatus("Synced");
@@ -580,6 +594,8 @@ window.addEventListener("hashchange", () => {
         attachPresence();
         applyViewOnlyMode();
         if (noteChanged) updateStats("");
+        updateStats("");
+        console.log("[App] Switched to note:", noteId);
     }
 });
 
@@ -595,3 +611,8 @@ window.addEventListener("beforeunload", () => detachPresence());
 
 updateStats(notepad.value || "");
 applyViewOnlyMode();
+window.addEventListener("online", () => setSyncStatus("Synced"));
+window.addEventListener("offline", () => setSyncStatus("Offline"));
+
+updateStats(notepad.value || "");
+setSyncStatus(navigator.onLine ? "Synced" : "Offline");
