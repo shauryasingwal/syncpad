@@ -137,6 +137,8 @@ const panelOverlay = document.getElementById("panel-overlay");
 const panelBody    = document.getElementById("panelBody");
 const panelFooter  = document.getElementById("panelFooter");
 const panelClose   = document.getElementById("panelClose");
+const syncStatus   = document.getElementById("syncStatus");
+const noteStats    = document.getElementById("noteStats");
 
 
 /* ==========================
@@ -150,6 +152,20 @@ function showToast(msg) {
     toast.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
+}
+
+function setSyncStatus(status) {
+    syncStatus.textContent = status;
+    syncStatus.classList.remove("saving", "offline");
+    if (status === "Saving…") syncStatus.classList.add("saving");
+    if (status === "Offline") syncStatus.classList.add("offline");
+}
+
+function updateStats(text) {
+    const trimmed = text.trim();
+    const words = trimmed ? trimmed.split(/\s+/).length : 0;
+    const chars = text.length;
+    noteStats.textContent = `${words} words · ${chars} chars`;
 }
 
 
@@ -176,6 +192,8 @@ function attachListener() {
             notepad.value  = data;
             localStorage.setItem(LOCAL_KEY, data);
             isRemoteUpdate = false;
+            updateStats(data);
+            setSyncStatus("Synced");
             console.log("[Cloud] Synced");
         }
 
@@ -184,6 +202,7 @@ function attachListener() {
             if (backup) {
                 notepad.value = backup;
                 noteRef.set(backup);
+                updateStats(backup);
             }
         }
     });
@@ -200,11 +219,14 @@ let saveTimer = null;
 
 notepad.addEventListener("input", () => {
     if (isRemoteUpdate) return;
+    setSyncStatus("Saving…");
+    updateStats(notepad.value);
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
         const text = notepad.value;
         noteRef.set(text);
         localStorage.setItem(LOCAL_KEY, text);
+        setSyncStatus("Synced");
         console.log("[Cloud] Saved");
     }, 500);
 });
@@ -293,6 +315,8 @@ clearBtn.addEventListener("click", () => {
     notepad.value = "";
     noteRef.set("");
     localStorage.removeItem(LOCAL_KEY);
+    updateStats("");
+    setSyncStatus("Synced");
 
     notepad.focus();
     showToast("🗑 Note cleared");
@@ -401,6 +425,7 @@ function deleteNote(id) {
             notepad.value = "";
             window.location.hash = noteId;
             attachListener();
+            updateStats("");
             showToast("Switched to your last note");
         } else {
             // No owned notes left — create a fresh one
@@ -412,6 +437,7 @@ function deleteNote(id) {
             addOwned(noteId);
             updateNewBtnState();
             attachListener();
+            updateStats("");
             showToast("✦ New note created");
         }
 
@@ -443,6 +469,7 @@ window.addEventListener("hashchange", () => {
         LOCAL_KEY = `notepad_backup_${noteId}`;
         notepad.value = "";
         attachListener();
+        updateStats("");
         console.log("[App] Switched to note:", noteId);
     }
 });
@@ -453,3 +480,8 @@ window.addEventListener("hashchange", () => {
 ========================== */
 
 window.onload = () => notepad.focus();
+window.addEventListener("online", () => setSyncStatus("Synced"));
+window.addEventListener("offline", () => setSyncStatus("Offline"));
+
+updateStats(notepad.value || "");
+setSyncStatus(navigator.onLine ? "Synced" : "Offline");
